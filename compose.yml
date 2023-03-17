@@ -1,0 +1,39 @@
+services:
+  fastapi:
+    container_name: fastapi-template
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    working_dir: /usr/code/
+    command: python3.10 -m uvicorn api.main:app --reload --host 0.0.0.0 --port 8888
+    volumes:
+      - type: bind
+        source: ./backend
+        target: /usr/code/
+    ports:
+      - target: 8888
+        published: 8888
+    depends_on:
+      postgres:
+        condition: service_started
+
+  postgres:
+    container_name: postgres-template
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    volumes:
+      - type: volume
+        source: postgres-volume
+        target: /var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - target: 5432
+        published: 5432
+
+volumes:
+  postgres-volume:
+    name: fastapi-postgresq-sqlalchemy-template
