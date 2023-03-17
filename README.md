@@ -1,7 +1,4 @@
-# FastAPI + SQLAlchemy + Postgresql Docker compose templates
-
-さくっと使えるようなやつ
-
+# FastAPI + SQLModel + PostgresSQL Docker Compose Templates
 
 ## Envs
 
@@ -17,7 +14,6 @@
 │   │   ├── cruds/
 │   │   ├── models/
 │   │   ├── routers/
-│   │   └── schemas/
 │   ├── pyproject.toml
 │   └── requirements.txt
 ├── compose.yml
