@@ -10,7 +10,6 @@
 │   │   ├── __init__.py
 │   │   ├── db.py
 │   │   ├── main.py
-│   │   ├── migrate_db.py
 │   │   ├── cruds/
 │   │   ├── models/
 │   │   ├── routers/
