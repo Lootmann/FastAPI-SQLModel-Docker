@@ -27,49 +27,58 @@ def verify_password(plain_password: str, hashed_password) -> bool:
 
 
 def create_access_token(username: str):
-    data = {"sub": username}
     expire = datetime.utcnow() + timedelta(credential.access_token_expire_minutes)
-    data.update({"exp": expire})
+    data = {"sub": username, "exp": expire}
     return jwt.encode(data, credential.secret_key, algorithm=credential.algorithm)
 
 
 def create_refresh_token(username: str):
-    data = {"sub": username}
     expire = datetime.utcnow() + timedelta(days=7)
-    data.update({"exp": expire})
+    data = {"sub": username, "exp": expire}
     return jwt.encode(data, credential.secret_key, algorithm=credential.algorithm)
 
 
-def get_current_user(
-    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
-) -> user_model.User:
-    """
-    verify current user access_token, and username
+def get_username(token: str) -> str:
+    payload = jwt.decode(
+        token,
+        credential.secret_key,
+        algorithms=[credential.algorithm],
+    )
+    return payload.get("sub")
 
-    when access token is expired, refresh access token if it's withing the validity
-    period of refresh token.
-    """
+
+def check_token(token: str) -> bool:
     try:
         payload = jwt.decode(
-            token, credential.secret_key, algorithms=[credential.algorithm]
+            token,
+            credential.secret_key,
+            algorithms=[credential.algorithm],
         )
         username: str = payload.get("sub", None)
 
         if username is None:
-            raise AuthException.raise404(detail="User Not Found")
-
-        token = auth_model.TokenUser(username=username)
+            raise AuthException.raise401(detail="User Not Found")
 
     except ExpiredSignatureError:
-        # TODO: when access token is expired, update it until refresh token is not expired D:
-        raise AuthException.raise401(detail="Token is Expired")
+        return False
 
     except JWTError:
         raise AuthException.raise401(detail="Invalid JWT token")
 
-    user = user_api.find_by_name(db, token.username)
+    return True
 
-    if user is None:
-        raise AuthException.raise401(detail="User Not Found")
 
-    return user
+def get_current_user(
+    db: Session = Depends(get_db), access_token: str = Depends(oauth2_scheme)
+) -> user_model.User:
+    # check only access_token
+    if check_token(access_token):
+        username = get_username(access_token)
+        user = user_api.find_by_name(db, username)
+
+        if not user:
+            raise AuthException.raise401(detail="User Not Found")
+
+        return user
+
+    return None

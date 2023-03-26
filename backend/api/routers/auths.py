@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
@@ -9,23 +7,38 @@ from api.cruds import users as user_api
 from api.cruds.custom_exceptions import AuthException
 from api.db import get_db
 from api.models import auths as auth_model
-from api.models import users as user_model
 
 router = APIRouter(tags=["auth"], prefix="/auth")
 
 
-# @router.get("")
-# def get_current_user():
-#     pass
+@router.get(
+    "/refresh",
+    response_model=auth_model.Token,
+    status_code=status.HTTP_200_OK,
+)
+def refresh_access_token(
+    *,
+    db: Session = Depends(get_db),
+    token: auth_model.Token,
+):
+    """
+    Refresh access_token endpoint.
+    This will generate a new access token from the refresh token.
+    """
+    # TODO: check refresh token, when refresh is not expired, re-create access_token
+    if auth_api.check_token(token.refresh_token):
+        username = auth_api.get_username(token.refresh_token)
 
+        user = user_api.find_by_name(db, username)
+        if not user:
+            raise AuthException.raise404(detail="User Not Found")
 
-# @router.post("/refresh")
-# def refresh_token():
-#     """
-#     Refresh access_token endpoint. This will generate a new access token from
-#     the refresh token.
-#     """
-#     pass
+        new_token = token
+        new_token.access_token = auth_api.create_access_token(username)
+        return new_token
+
+    # TODO: when refresh token is expired, API to /auth/token, create refresh token again
+    raise AuthException.raise401(detail="Relogin")
 
 
 @router.post(
@@ -47,6 +60,7 @@ def create_token(
 
     token = auth_model.Token(
         access_token=auth_api.create_access_token(found.username),
+        refresh_token=auth_api.create_refresh_token(found.username),
         token_type="bearer",
     )
     return token

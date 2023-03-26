@@ -27,16 +27,21 @@ class TestGetUser:
         )
         assert resp.status_code == status.HTTP_201_CREATED
 
-        token_resp = client.post(
-            "/auth/token", data={"username": username, "password": password}
-        )
-        token = auth_model.Token(**token_resp.json())
-
+        # generate new user's token
         user_id = resp.json()["id"]
+
+        resp = client.post(
+            "/auth/token",
+            data={"username": username, "password": password},
+            headers={"content-type": "application/x-www-form-urlencoded"},
+        )
+        token = auth_model.Token(**resp.json())
+
         resp = client.get(
             f"/users/{user_id}",
             headers={"Authorization": f"Bearer {token.access_token}"},
         )
+
         assert resp.status_code == status.HTTP_200_OK
 
 
