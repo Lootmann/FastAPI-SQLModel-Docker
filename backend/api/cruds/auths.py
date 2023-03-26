@@ -81,4 +81,5 @@ def get_current_user(
 
         return user
 
-    return None
+    # NOTE: when this raise happens, try to refresh token
+    raise AuthException.raise401(detail="JWT expired")
