@@ -24,9 +24,7 @@ def find_by_name(db: Session, user_name: str) -> user_model.User | None:
 def create_user(db: Session, user_body: user_model.UserCreate) -> user_model.User:
     user = user_model.User(**user_body.dict())
     user.password = auth_api.hashed_password(user_body.password)
-
-    data = {"sub": user.username}
-    user.refresh_token = auth_api.create_refresh_token(data)
+    user.refresh_token = auth_api.create_refresh_token(user.username)
 
     db.add(user)
     db.commit()
