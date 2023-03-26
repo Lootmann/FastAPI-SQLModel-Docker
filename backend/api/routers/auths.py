@@ -7,6 +7,7 @@ from api.cruds import users as user_api
 from api.cruds.custom_exceptions import AuthException
 from api.db import get_db
 from api.models import auths as auth_model
+from api.models import users as user_model
 
 router = APIRouter(tags=["auth"], prefix="/auth")
 
@@ -63,4 +64,11 @@ def create_token(
         refresh_token=auth_api.create_refresh_token(found.username),
         token_type="bearer",
     )
+
+    # update refresh token
+    found.refresh_token = token.refresh_token
+    db.add(found)
+    db.commit()
+    db.refresh(found)
+
     return token
