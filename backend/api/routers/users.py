@@ -19,6 +19,15 @@ def get_all_users(*, db: Session = Depends(get_db)):
     return user_api.get_all_users(db)
 
 
+@router.get(
+    "/{user_id}",
+    response_model=user_model.UserRead,
+    status_code=status.HTTP_200_OK,
+)
+def get_all_users(*, db: Session = Depends(get_db), user_id: int):
+    return user_api.find_by_id(db, user_id)
+
+
 @router.post(
     "",
     response_model=user_model.UserRead,
