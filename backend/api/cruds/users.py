@@ -16,11 +16,16 @@ def find_by_id(db: Session, user_id: int) -> user_model.User | None:
     return db.get(user_model.User, user_id)
 
 
+def find_by_name(db: Session, user_name: str) -> user_model.User | None:
+    stmt = select(user_model.User).where(user_model.User.username == user_name)
+    return db.exec(stmt).first()
+
+
 def create_user(db: Session, user_body: user_model.UserCreate) -> user_model.User:
     user = user_model.User(**user_body.dict())
     user.password = auth_api.hashed_password(user_body.password)
 
-    data = {"sub": user.name}
+    data = {"sub": user.username}
     user.refresh_token = auth_api.create_refresh_token(data)
 
     db.add(user)

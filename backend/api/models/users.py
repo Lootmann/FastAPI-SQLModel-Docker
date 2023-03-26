@@ -4,7 +4,7 @@ from sqlmodel import Field, SQLModel
 
 
 class UserBase(SQLModel):
-    name: str = Field(index=True, min_length=5, max_length=100)
+    username: str = Field(index=True, min_length=5, max_length=100)
 
 
 class User(UserBase, table=True):

@@ -20,5 +20,5 @@ class TestPostAuth:
         )
 
         assert "access_token" in resp.json()
-        assert "refresh_token" in resp.json()
+        assert "refresh_token" not in resp.json()
         assert "token_type" in resp.json()
