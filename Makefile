@@ -31,10 +31,10 @@ migrate:
 	docker compose exec $(APP_NAME) python3 -m api.db
 
 login-app:
-	docker exec -it $(APP_NAME) /bin/bash
+	docker exec -it $(APP_CONTAINER_NAME) /bin/bash
 
 login-db:
-	docker exec -it $(DB_NAME) psql -U postgres
+	docker exec -it $(DB_CONTAINER_NAME) psql -U postgres
 
 # tests
 test:
