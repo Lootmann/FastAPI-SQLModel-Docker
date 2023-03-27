@@ -30,6 +30,26 @@ class TestPostAuth:
         assert "refresh_token" in resp.json()
         assert "token_type" in resp.json()
 
+    def test_create_token_with_non_exist_user(self, client: TestClient):
+        resp = client.post(
+            "/auth/token", data={"username": "hoge", "password": "newnew"}
+        )
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+        assert resp.json() == {"detail": "User Not Found"}
+
+    def test_create_token_with_wrong_password(self, client: TestClient):
+        resp = client.post(
+            "/users",
+            json={"username": "hhhhhh", "password": "laksdjfl"},
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+
+        resp = client.post(
+            "/auth/token", data={"username": "hhhhhh", "password": "newnew"}
+        )
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+        assert resp.json() == {"detail": "username or password is invalid"}
+
 
 class TestJWT:
     def test_invalid_jwt_with_wrong_payload(self):

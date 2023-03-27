@@ -57,10 +57,10 @@ def create_token(
     found = user_api.find_by_name(db, form_data.username)
 
     if not found:
-        raise AuthException.raise404(detail="User Not Found")
+        raise AuthException.raise401(detail="User Not Found")
 
     if not auth_api.verify_password(form_data.password, found.password):
-        raise AuthException.raise401(detail="username is password is invalid")
+        raise AuthException.raise401(detail="username or password is invalid")
 
     token = auth_model.Token(
         access_token=auth_api.create_access_token(found.username),
