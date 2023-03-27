@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
@@ -9,7 +9,6 @@ from sqlmodel import Session
 from api.cruds import users as user_api
 from api.cruds.custom_exceptions import AuthException
 from api.db import get_db
-from api.models import auths as auth_model
 from api.models import users as user_model
 from api.settings import Settings
 
@@ -27,18 +26,21 @@ def verify_password(plain_password: str, hashed_password) -> bool:
 
 
 def create_access_token(username: str):
+    # NOTE: payload's sub has username, this may cause security issue.
     expire = datetime.utcnow() + timedelta(credential.access_token_expire_minutes)
     data = {"sub": username, "exp": expire}
     return jwt.encode(data, credential.secret_key, algorithm=credential.algorithm)
 
 
 def create_refresh_token(username: str):
-    expire = datetime.utcnow() + timedelta(days=7)
+    # NOTE: payload's sub has username, this may cause security issue.
+    expire = datetime.utcnow() + timedelta(credential.refresh_token_expire_minutes)
     data = {"sub": username, "exp": expire}
     return jwt.encode(data, credential.secret_key, algorithm=credential.algorithm)
 
 
 def get_username(token: str) -> str:
+    # NOTE: You should ensure that token is valid JWT, and token's sub has username.
     payload = jwt.decode(
         token,
         credential.secret_key,
@@ -48,6 +50,21 @@ def get_username(token: str) -> str:
 
 
 def check_token(token: str) -> bool:
+    """check_token
+
+    1. check jwt has username
+    2. check jwt is expired
+    3. check jwt is valid
+
+    Args:
+        token (str): access_token
+
+    Raises:
+        AuthException.raise401: HTTP_401_UNAUTHORIZED,
+
+    Returns:
+        bool: True means valid token, False means expired token
+    """
     try:
         payload = jwt.decode(
             token,
@@ -57,7 +74,7 @@ def check_token(token: str) -> bool:
         username: str = payload.get("sub", None)
 
         if username is None:
-            raise AuthException.raise401(detail="User Not Found")
+            raise AuthException.raise401(detail="Invalid JWT token")
 
     except ExpiredSignatureError:
         return False

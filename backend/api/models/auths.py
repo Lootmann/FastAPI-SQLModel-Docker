@@ -9,3 +9,11 @@ class Token(SQLModel):
 
 class TokenUser(SQLModel):
     username: str
+
+
+class AccessToken(SQLModel):
+    access_token: str
+
+
+class RefeshToken(SQLModel):
+    refresh_token: str
