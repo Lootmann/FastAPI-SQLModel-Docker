@@ -20,6 +20,7 @@ cat <<EOF > ./backend/.env
   SECRET_KEY = "${SECRET_KEY}"
   ALGORITHM = "HS256"
   ACCESS_TOKEN_EXPIRE_MINUTES = 30
+  REFRESH_TOKEN_EXPIRE_MINUTES = 10080
 
   # fastapi db connection
   # db name defines on 'compose.yml' services
