@@ -12,6 +12,7 @@ class AuthException:
 
     @staticmethod
     def raise404(detail: str, headers: dict = {"www-Authenticate": "Bearer"}):
+        # FIXME: when should I use this?
         return HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=detail,
