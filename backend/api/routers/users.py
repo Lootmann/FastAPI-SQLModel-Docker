@@ -65,3 +65,10 @@ def update_user(
     return user_api.update_user(db, current_user, user)
 
 
+@router.delete("", response_model=None, status_code=status.HTTP_200_OK)
+def delete_user(
+    *,
+    db: Session = Depends(get_db),
+    current_user=Depends(auth_api.get_current_user),
+):
+    return user_api.delete_user(db, current_user)

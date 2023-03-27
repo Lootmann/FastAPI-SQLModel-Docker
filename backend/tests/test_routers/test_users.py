@@ -102,3 +102,34 @@ class TestPatchUser:
             json={"username": "malicious", "password": "hoge"},
         )
         assert resp.json() == {"detail": "Not authenticated"}
+
+
+class TestDeleteUser:
+    def test_delete_user(self, client: TestClient, login_fixture):
+        _, headers = login_fixture
+
+        # create new user
+        resp = client.post("/users", json={"username": "new D:", "password": "newnew"})
+        new_user = user_model.UserRead(**resp.json())
+
+        users = client.get("/users", headers=headers)
+        assert len(users.json()) == 2
+
+        # delete a user which is created by login_fixture
+        resp = client.delete("/users", headers=headers)
+        assert resp.json() is None
+
+        # login_fixture user has been deleted, so headers is already unavailable.
+        users = client.get("/users", headers=headers)
+        assert users.json() == {"detail": "User Not Found"}
+
+        # get new user token
+        resp = client.post(
+            "/auth/token", data={"username": "new D:", "password": "newnew"}
+        )
+        new_headers = {"Authorization": f"Bearer {resp.json()['access_token']}"}
+
+        resp = client.get("/users", headers=new_headers)
+        assert len(resp.json()) == 1
+        assert resp.json()[0]["id"] == new_user.id
+        assert resp.json()[0]["username"] == new_user.username
