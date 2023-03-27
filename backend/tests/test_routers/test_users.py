@@ -2,6 +2,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from api.models import auths as auth_model
+from api.models import users as user_model
 from tests.factory import random_string
 
 
@@ -78,3 +79,26 @@ class TestPostUser:
         resp = client.get("/users", headers=headers)
         assert resp.status_code == status.HTTP_200_OK
         assert len(resp.json()) == 5
+
+
+class TestPatchUser:
+    def test_update_user(self, client: TestClient, login_fixture):
+        user, headers = login_fixture
+
+        resp = client.patch(
+            "/users",
+            json={"username": "updated :^)", "password": "updated :^)"},
+            headers=headers,
+        )
+        assert resp.status_code == status.HTTP_200_OK
+
+        updated_user = user_model.UserRead(**resp.json())
+        assert updated_user.username == "updated :^)"
+        assert updated_user.id == user.id
+
+    def test_update_user_without_login(self, client: TestClient):
+        resp = client.patch(
+            "/users",
+            json={"username": "malicious", "password": "hoge"},
+        )
+        assert resp.json() == {"detail": "Not authenticated"}

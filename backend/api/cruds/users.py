@@ -30,3 +30,20 @@ def create_user(db: Session, user_body: user_model.UserCreate) -> user_model.Use
     db.commit()
     db.refresh(user)
     return user
+
+
+def update_user(
+    db: Session, user: user_model.User, user_body: user_model.UserUpdate
+) -> user_model.User:
+    user_data = user_body.dict(exclude_unset=True)
+    for key, value in user_data.items():
+        if key == "password":
+            setattr(user, key, auth_api.hashed_password(value))
+        else:
+            setattr(user, key, value)
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
