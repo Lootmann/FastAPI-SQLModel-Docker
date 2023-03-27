@@ -88,6 +88,17 @@ def check_token(token: str) -> bool:
 def get_current_user(
     db: Session = Depends(get_db), access_token: str = Depends(oauth2_scheme)
 ) -> user_model.User:
+    """get_current_user
+
+    Args:
+        db (Session): DI
+        access_token (str):
+            get Bearer token headers: {"Authorization": "Bearer eyJ..."}
+            when header has not "Authorization", raise 401 No authorized
+
+    Returns:
+        user_model.User: current logged in user
+    """
     # check only access_token
     if check_token(access_token):
         username = get_username(access_token)

@@ -1,8 +1,13 @@
 import time
+from datetime import datetime, timedelta
 
-from fastapi import status
+import pytest
+from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
+from jose import jwt
 
+from api.cruds import auths as auth_api
+from api.settings import Settings
 from tests.factory import random_string
 
 
@@ -24,6 +29,47 @@ class TestPostAuth:
         assert "access_token" in resp.json()
         assert "refresh_token" in resp.json()
         assert "token_type" in resp.json()
+
+
+class TestJWT:
+    def test_invalid_jwt_with_wrong_payload(self):
+        credential = Settings()
+
+        expire = datetime.utcnow() + timedelta(credential.refresh_token_expire_minutes)
+        token = jwt.encode(
+            {"exp": expire}, credential.secret_key, algorithm=credential.algorithm
+        )
+
+        with pytest.raises(HTTPException):
+            auth_api.check_token(token)
+
+    def test_invalid_jwt_with_expired_date(self):
+        credential = Settings()
+
+        expire = datetime.utcnow() + timedelta(days=-1)
+        token = jwt.encode(
+            {"sub": "hoge", "exp": expire},
+            credential.secret_key,
+            algorithm=credential.algorithm,
+        )
+
+        assert auth_api.check_token(token) is False
+
+    def test_invalid_jwt(self):
+        credential = Settings()
+
+        expire = datetime.utcnow() + timedelta(days=-1)
+        token = (
+            jwt.encode(
+                {"sub": "hoge", "exp": expire},
+                credential.secret_key,
+                algorithm=credential.algorithm,
+            )
+            + "k"
+        )
+
+        with pytest.raises(HTTPException):
+            auth_api.check_token(token)
 
 
 class TestRefreshToken:
