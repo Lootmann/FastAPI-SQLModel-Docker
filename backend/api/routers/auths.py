@@ -1,3 +1,5 @@
+import time
+
 from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
@@ -54,10 +56,22 @@ def create_token(
     db: Session = Depends(get_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
 ):
+    """
+    OAuth2PasswordRequestForm dependencies "username" and "password"
+    when your post request does NOT have these body params,
+    raise "HTTP_422 Unprocessable Entity"
+    """
+    if len(form_data.username) < 5:
+        raise AuthException.raise401(detail="Username must be at least 5 chars long")
+
+    if len(form_data.password) < 5:
+        raise AuthException.raise401(detail="Password must be at least 5 chars long")
+
     found = user_api.find_by_name(db, form_data.username)
 
     if not found:
-        raise AuthException.raise401(detail="User Not Found")
+        time.sleep(0.5)
+        raise AuthException.raise401(detail="username of password is invalid")
 
     if not auth_api.verify_password(form_data.password, found.password):
         raise AuthException.raise401(detail="username or password is invalid")

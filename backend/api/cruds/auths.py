@@ -46,7 +46,10 @@ def get_username(token: str) -> str:
         credential.secret_key,
         algorithms=[credential.algorithm],
     )
-    return payload.get("sub")
+    username = payload.get("sub", None)
+    if not username:
+        raise AuthException.raise401("Invalid JWT Token")
+    return username
 
 
 def check_token(token: str) -> bool:

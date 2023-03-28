@@ -30,12 +30,18 @@ class TestPostAuth:
         assert "refresh_token" in resp.json()
         assert "token_type" in resp.json()
 
-    def test_create_token_with_non_exist_user(self, client: TestClient):
+    def test_create_token_with_invalid_length_of_fields(self, client: TestClient):
         resp = client.post(
             "/auth/token", data={"username": "hoge", "password": "newnew"}
         )
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
-        assert resp.json() == {"detail": "User Not Found"}
+        assert resp.json() == {"detail": "Username must be at least 5 chars long"}
+
+        resp = client.post(
+            "/auth/token", data={"username": "hogehoge", "password": "enw"}
+        )
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+        assert resp.json() == {"detail": "Password must be at least 5 chars long"}
 
     def test_create_token_with_wrong_password(self, client: TestClient):
         resp = client.post(
@@ -49,6 +55,13 @@ class TestPostAuth:
         )
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
         assert resp.json() == {"detail": "username or password is invalid"}
+
+    def test_create_token_with_non_exist_user(self, client: TestClient):
+        resp = client.post(
+            "/auth/token",
+            data={"username": "hhhhhh", "password": "laksdjfl"},
+        )
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 class TestJWT:
