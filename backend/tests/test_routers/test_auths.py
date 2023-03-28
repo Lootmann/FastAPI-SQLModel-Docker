@@ -117,3 +117,10 @@ class TestRefreshToken:
         old_access_token = headers["Authorization"][:7]
         new_access_token = resp.json()["access_token"]
         assert old_access_token != new_access_token
+
+    def test_refresh_token_with_fake_refresh_token(self, client: TestClient):
+        fake_refresh_token = auth_api.create_refresh_token("hogege")
+
+        resp = client.post("/auth/refresh", json={"refresh_token": fake_refresh_token})
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+        assert resp.json() == {"detail": "User Not Found"}
